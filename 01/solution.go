@@ -4,6 +4,7 @@ import (
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -51,8 +52,20 @@ func doExamples(waitGroup *sync.WaitGroup) {
 func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
+	depthMeasurements := loadPuzzleInput()
+
+	depthMeasurementCount := len(depthMeasurements)
+
+	depthMeasurementIncreaseCount := 0
+
+	for i := 1; i < depthMeasurementCount; i++ {
+		if depthMeasurements[i-1] < depthMeasurements[i] {
+			depthMeasurementIncreaseCount = depthMeasurementIncreaseCount + 1
+		}
+	}
+
 	channel <- Result{
-		answer:   1,
+		answer:   depthMeasurementIncreaseCount,
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -68,7 +81,14 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	waitGroup.Done()
 }
 
-func loadPuzzleInput() string {
+func loadPuzzleInput() []int {
 	filename := "puzzle-input.dat"
-	return support.ReadFile(filename)
+	strings := support.ReadFileIntoLines(filename)
+	var numbers []int
+	for _, value := range strings {
+		number, _ := strconv.Atoi(value)
+		numbers = append(numbers, number)
+	}
+
+	return numbers
 }
