@@ -54,23 +54,6 @@ func findMostCommonValueFor(input []string, index int) byte {
 		occurrences[number[index]]++
 	}
 
-	if occurrences['0'] < occurrences['1'] {
-		return '1'
-	} else {
-		return '0'
-	}
-}
-
-func findMostCommonValueFor2(input []string, index int) byte {
-	var occurrences = make(map[byte]int)
-
-	occurrences['0'] = 0
-	occurrences['1'] = 0
-
-	for _, number := range input {
-		occurrences[number[index]]++
-	}
-
 	if occurrences['0'] == occurrences['1'] {
 		return '1'
 	} else if occurrences['0'] < occurrences['1'] {
@@ -114,7 +97,7 @@ func filterByValueAtIndex(input []string, index int, value byte) []string {
 func findOxygenGeneratorRating(input []string) string {
 	width := len(input[0])
 	for index := 0; index < width; index++ {
-		mostCommonValue := findMostCommonValueFor2(input, index)
+		mostCommonValue := findMostCommonValueFor(input, index)
 		input = filterByValueAtIndex(input, index, mostCommonValue)
 		if len(input) == 1 {
 			return input[0]
