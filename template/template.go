@@ -16,19 +16,19 @@ type Result struct {
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	_ = loadPuzzleInput()
-
 	waitCount := 3
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(waitCount)
 
+	exampleChannel := make(chan Result)
 	partOneChannel := make(chan Result)
 	partTwoChannel := make(chan Result)
 
-	go doExamples(&waitGroup)
+	go doExamples(exampleChannel, &waitGroup)
 	go doPartOne(partOneChannel, &waitGroup)
 	go doPartTwo(partTwoChannel, &waitGroup)
 
+	exampleResult := <-exampleChannel
 	partOneResult := <-partOneChannel
 	partTwoResult := <-partTwoChannel
 
@@ -36,20 +36,31 @@ func main() {
 
 	log.
 		Info().
+		Int("example-answer", exampleResult.answer).
+		Int64("example-duration", exampleResult.duration).
 		Int("part-one-answer", partOneResult.answer).
 		Int64("part-one-duration", partOneResult.duration).
 		Int("part-two-answer", partTwoResult.answer).
 		Int64("part-two-duration", partTwoResult.duration).
-		Msg("day ...")
+		Msg("day 04")
 }
 
-func doExamples(waitGroup *sync.WaitGroup) {
+func doExamples(channel chan Result, waitGroup *sync.WaitGroup) {
+	start := time.Now()
 
+	_ = loadPuzzleInput("example-input.dat")
+
+	channel <- Result{
+		answer:   1,
+		duration: time.Since(start).Nanoseconds(),
+	}
 	waitGroup.Done()
 }
 
 func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
+
+	_ = loadPuzzleInput("puzzle-input.dat")
 
 	channel <- Result{
 		answer:   1,
@@ -61,6 +72,8 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
+	_ = loadPuzzleInput("puzzle-input.dat")
+
 	channel <- Result{
 		answer:   1,
 		duration: time.Since(start).Nanoseconds(),
@@ -68,7 +81,6 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	waitGroup.Done()
 }
 
-func loadPuzzleInput() string {
-	filename := "puzzle-input.dat"
+func loadPuzzleInput(filename string) string {
 	return support.ReadFile(filename)
 }
