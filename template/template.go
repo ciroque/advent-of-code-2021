@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+/*
+	Solution implementation
+*/
+
+/*
+	Main
+*/
+
 type Result struct {
 	answer   int
 	duration int64
@@ -44,6 +52,10 @@ func main() {
 		Int64("part-two-duration", partTwoResult.duration).
 		Msg("day 04")
 }
+
+/*
+	Executors
+*/
 
 func doExamples(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
