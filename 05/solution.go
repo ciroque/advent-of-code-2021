@@ -24,7 +24,6 @@ type Line struct {
 	start              Point
 	end                Point
 	intermediatePoints []Point
-	orientation        string
 }
 
 func (l *Line) CalculateMovementSteps() (int, int, int) {
