@@ -31,23 +31,23 @@ func (c *Cell) mark() {
 	c.marked = true
 }
 
-type Puzzle struct {
+type Board struct {
 	size  int
 	cells []Cell
 }
 
-func NewPuzzle() Puzzle {
-	return Puzzle{
+func NewBoard() Board {
+	return Board{
 		size:  5,
 		cells: []Cell{},
 	}
 }
 
-func (p *Puzzle) appendNewCell(value int) {
+func (p *Board) appendNewCell(value int) {
 	p.cells = append(p.cells, NewCell(value))
 }
 
-func (p *Puzzle) markNumber(value int) bool {
+func (p *Board) markNumber(value int) bool {
 	length := len(p.cells)
 	for index := 0; index < length; index++ {
 		if p.cells[index].value == value {
@@ -69,7 +69,7 @@ func rowIndexCalculator(colIndex int, rowIndex int, size int) int {
 	return (colIndex * size) + (rowIndex % size)
 }
 
-func (p *Puzzle) checkDimension(calculateIndex IndexCalculator) bool {
+func (p *Board) checkDimension(calculateIndex IndexCalculator) bool {
 	size := p.size
 
 	for cellIndex := 0; cellIndex < size; cellIndex++ {
@@ -89,30 +89,30 @@ func (p *Puzzle) checkDimension(calculateIndex IndexCalculator) bool {
 	return false
 }
 
-func (p *Puzzle) checkForWin() bool {
+func (p *Board) checkForWin() bool {
 	return p.checkDimension(columnIndexCalculator) || p.checkDimension(rowIndexCalculator)
 }
 
-func (p *Puzzle) print() string {
-	puzzle := ""
+func (p *Board) print() string {
+	board := ""
 	indicator := " "
 	for index, cell := range p.cells {
 		if index%p.size == 0 {
-			puzzle = puzzle + "\n"
+			board = board + "\n"
 		}
 		if cell.marked {
 			indicator = "+"
 		} else {
 			indicator = "-"
 		}
-		puzzle = puzzle + fmt.Sprintf("%v%2v ", indicator, cell.value)
+		board = board + fmt.Sprintf("%v%2v ", indicator, cell.value)
 	}
 
-	puzzle = puzzle + "\n"
-	return puzzle
+	board = board + "\n"
+	return board
 }
 
-func (p *Puzzle) sumUnmarkedCells() int {
+func (p *Board) sumUnmarkedCells() int {
 	sum := 0
 
 	for _, cell := range p.cells {
@@ -124,39 +124,39 @@ func (p *Puzzle) sumUnmarkedCells() int {
 	return sum
 }
 
-func buildPuzzles(rawPuzzles [][]string) []Puzzle {
-	var puzzles []Puzzle
+func buildBoards(rawBoards [][]string) []Board {
+	var boards []Board
 
-	for _, rawPuzzle := range rawPuzzles {
-		puzzle := NewPuzzle()
+	for _, rawBoard := range rawBoards {
+		board := NewBoard()
 
-		for _, puzzleRow := range rawPuzzle {
-			numbers := strings.Fields(puzzleRow)
+		for _, row := range rawBoard {
+			numbers := strings.Fields(row)
 
 			for _, number := range numbers {
 				value, _ := strconv.Atoi(number)
-				puzzle.appendNewCell(value)
+				board.appendNewCell(value)
 			}
 		}
 
-		puzzles = append(puzzles, puzzle)
+		boards = append(boards, board)
 	}
 
-	return puzzles
+	return boards
 }
 
-func loadPuzzles(input string) []Puzzle {
+func loadBoards(input string) []Board {
 	lines := strings.Split(input, "\n")
-	rawPuzzles := separatePuzzleInput(lines)
-	return buildPuzzles(rawPuzzles)
+	rawBoards := separateBoardInput(lines)
+	return buildBoards(rawBoards)
 }
 
-func runGame(numbers []int, puzzles []Puzzle) (bool, int, *Puzzle) {
+func runGame(numbers []int, boards []Board) (bool, int, *Board) {
 	for _, number := range numbers {
-		for _, puzzle := range puzzles {
-			if puzzle.markNumber(number) {
-				if puzzle.checkForWin() {
-					return true, number, &puzzle
+		for _, board := range boards {
+			if board.markNumber(number) {
+				if board.checkForWin() {
+					return true, number, &board
 				}
 			}
 		}
@@ -165,18 +165,18 @@ func runGame(numbers []int, puzzles []Puzzle) (bool, int, *Puzzle) {
 	return false, -1, nil
 }
 
-func runGame2(numbers []int, puzzles []Puzzle) (bool, int, *Puzzle) {
+func runGame2(numbers []int, boards []Board) (bool, int, *Board) {
 	mostCallsToWinNumber := 0
 	mostCallsToWinIndex := 0
-	var mostCallsToWinPuzzle Puzzle
+	var mostCallsToWinBoard Board
 
-	for _, puzzle := range puzzles {
+	for _, board := range boards {
 		for nidx, number := range numbers {
-			if puzzle.markNumber(number) {
-				if puzzle.checkForWin() {
+			if board.markNumber(number) {
+				if board.checkForWin() {
 					if mostCallsToWinIndex < nidx {
 						mostCallsToWinIndex = nidx
-						mostCallsToWinPuzzle = puzzle
+						mostCallsToWinBoard = board
 						mostCallsToWinNumber = number
 					}
 					break
@@ -185,10 +185,10 @@ func runGame2(numbers []int, puzzles []Puzzle) (bool, int, *Puzzle) {
 		}
 	}
 
-	return true, mostCallsToWinNumber, &mostCallsToWinPuzzle
+	return true, mostCallsToWinNumber, &mostCallsToWinBoard
 }
 
-func separatePuzzleInput(lines []string) [][]string {
+func separateBoardInput(lines []string) [][]string {
 	var output [][]string
 
 	startIndex := 0
@@ -270,17 +270,17 @@ func doExamples(channel chan Result, waitGroup *sync.WaitGroup) {
 
 	solution := 0
 
-	inputNumbers := loadPuzzleInput("example-numbers.dat")
+	inputNumbers := loadBoardInput("example-numbers.dat")
 	drawnNumbers := stringToIntList(inputNumbers)
 
-	inputPuzzles := loadPuzzleInput("example-input.dat")
-	puzzles := loadPuzzles(inputPuzzles)
+	inputBoards := loadBoardInput("example-input.dat")
+	boards := loadBoards(inputBoards)
 
-	winner, number, puzzle := runGame(drawnNumbers, puzzles)
+	winner, number, board := runGame(drawnNumbers, boards)
 	if winner {
-		fmt.Printf(puzzle.print())
-		puzzleScore := puzzle.sumUnmarkedCells()
-		solution = number * puzzleScore
+		fmt.Printf(board.print())
+		boardScore := board.sumUnmarkedCells()
+		solution = number * boardScore
 	}
 
 	channel <- Result{
@@ -295,17 +295,17 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 
 	solution := 0
 
-	inputNumbers := loadPuzzleInput("puzzle-numbers.dat")
+	inputNumbers := loadBoardInput("puzzle-numbers.dat")
 	drawnNumbers := stringToIntList(inputNumbers)
 
-	inputPuzzles := loadPuzzleInput("puzzle-input.dat")
-	puzzles := loadPuzzles(inputPuzzles)
+	inputBaords := loadBoardInput("puzzle-input.dat")
+	boards := loadBoards(inputBaords)
 
-	winner, number, puzzle := runGame(drawnNumbers, puzzles)
+	winner, number, board := runGame(drawnNumbers, boards)
 	if winner {
-		fmt.Printf(puzzle.print())
-		puzzleScore := puzzle.sumUnmarkedCells()
-		solution = number * puzzleScore
+		fmt.Printf(board.print())
+		boardScore := board.sumUnmarkedCells()
+		solution = number * boardScore
 	}
 
 	channel <- Result{
@@ -320,17 +320,17 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 
 	solution := 0
 
-	inputNumbers := loadPuzzleInput("puzzle-numbers.dat")
-	inputPuzzles := loadPuzzleInput("puzzle-input.dat")
+	inputNumbers := loadBoardInput("puzzle-numbers.dat")
+	inputBoards := loadBoardInput("puzzle-input.dat")
 
 	drawnNumbers := stringToIntList(inputNumbers)
-	puzzles := loadPuzzles(inputPuzzles)
+	boards := loadBoards(inputBoards)
 
-	winner, number, puzzle := runGame2(drawnNumbers, puzzles)
+	winner, number, board := runGame2(drawnNumbers, boards)
 	if winner {
-		fmt.Printf(puzzle.print())
-		puzzleScore := puzzle.sumUnmarkedCells()
-		solution = number * puzzleScore
+		fmt.Printf(board.print())
+		score := board.sumUnmarkedCells()
+		solution = number * score
 	}
 
 	channel <- Result{
@@ -340,6 +340,6 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	waitGroup.Done()
 }
 
-func loadPuzzleInput(filename string) string {
+func loadBoardInput(filename string) string {
 	return support.ReadFile(filename)
 }
