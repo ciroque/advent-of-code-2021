@@ -14,7 +14,7 @@ mkdir $DIR_NAME
 
 cp ./template/template.go $DIR_NAME/solution.go
 
-touch $DIR_NAME/puzzle.txt
+touch $DIR_NAME/puzzle.html
 touch $DIR_NAME/example-input.dat
 touch $DIR_NAME/puzzle-input.dat
 
