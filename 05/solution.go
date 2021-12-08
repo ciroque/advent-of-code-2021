@@ -20,7 +20,14 @@ type Point struct {
 	y int
 }
 
-func (l *Line) MovementSteps() (int, int, int) {
+type Line struct {
+	start              Point
+	end                Point
+	intermediatePoints []Point
+	orientation        string
+}
+
+func (l *Line) CalculateMovementSteps() (int, int, int) {
 	deltaX := l.end.x - l.start.x
 	deltaY := l.end.y - l.start.y
 	absDeltaX := int(math.Abs(float64(deltaX)))
@@ -49,26 +56,6 @@ func (l *Line) MovementSteps() (int, int, int) {
 	return xm, ym, count
 }
 
-type Line struct {
-	start              Point
-	end                Point
-	intermediatePoints []Point
-	orientation        string
-}
-
-func (l *Line) CalculatePoints() {
-	xd, yd, count := l.MovementSteps()
-
-	x := l.start.x
-	y := l.start.y
-
-	for n := 1; n < count; n++ {
-		x += xd
-		y += yd
-		l.intermediatePoints = append(l.intermediatePoints, Point{x: x, y: y})
-	}
-}
-
 func (l *Line) IsDiagonal() bool {
 	return !l.IsVertical() && !l.IsHorizontal()
 }
@@ -79,12 +66,6 @@ func (l *Line) IsHorizontal() bool {
 
 func (l *Line) IsVertical() bool {
 	return l.start.x == l.end.x
-}
-
-func (l *Line) Swap() {
-	swap := l.end
-	l.end = l.start
-	l.start = swap
 }
 
 func (l *Line) ParseLine(input string) {
@@ -108,7 +89,7 @@ func Parse(input []string) []Line {
 	for _, inputLine := range input {
 		line := Line{}
 		line.ParseLine(inputLine)
-		line.CalculatePoints()
+		line.PopulateIntermediatePoints()
 		lines = append(lines, line)
 	}
 
@@ -121,6 +102,19 @@ func (l *Line) Points() []Point {
 	points = append(points, l.intermediatePoints...)
 	points = append(points, l.end)
 	return points
+}
+
+func (l *Line) PopulateIntermediatePoints() {
+	xd, yd, count := l.CalculateMovementSteps()
+
+	x := l.start.x
+	y := l.start.y
+
+	for n := 1; n < count; n++ {
+		x += xd
+		y += yd
+		l.intermediatePoints = append(l.intermediatePoints, Point{x: x, y: y})
+	}
 }
 
 func FindSolutionForInput(filename string, includeDiagonals bool) int {
