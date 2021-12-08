@@ -28,13 +28,21 @@ func (l *Line) MovementSteps() (int, int, int) {
 
 	xm, ym, count := 0, 0, 0
 
-	if deltaX > deltaY {
-		xm = int(deltaX / absDeltaX)
-		ym = int(deltaY / absDeltaX)
+	if deltaX == 0 {
+		xm = deltaX
+		ym = deltaY / absDeltaY
+		count = absDeltaY
+	} else if deltaY == 0 {
+		xm = deltaX / absDeltaX
+		ym = deltaY
+		count = absDeltaX
+	} else if deltaX > deltaY {
+		xm = deltaX / absDeltaX
+		ym = deltaY / absDeltaX
 		count = absDeltaX
 	} else {
-		xm = int(deltaX / absDeltaY)
-		ym = int(deltaY / absDeltaY)
+		xm = deltaX / absDeltaY
+		ym = deltaY / absDeltaY
 		count = absDeltaY
 	}
 
@@ -49,31 +57,15 @@ type Line struct {
 }
 
 func (l *Line) CalculatePoints() {
-	if l.IsHorizontal() {
-		l.orientation = "Horizontal"
-		for x2 := l.start.x + 1; x2 < l.end.x; x2++ {
-			l.intermediatePoints = append(l.intermediatePoints, Point{x: x2, y: l.start.y})
-		}
+	xd, yd, count := l.MovementSteps()
 
-	} else if l.IsVertical() {
-		l.orientation = "Vertical"
-		for y2 := l.start.y + 1; y2 < l.end.y; y2++ {
-			l.intermediatePoints = append(l.intermediatePoints, Point{x: l.start.x, y: y2})
-		}
+	x := l.start.x
+	y := l.start.y
 
-	} else if l.IsDiagonal() {
-		l.orientation = "Diagonal"
-
-		xd, yd, count := l.MovementSteps()
-
-		x := l.start.x
-		y := l.start.y
-
-		for n := 1; n < count; n++ {
-			x += xd
-			y += yd
-			l.intermediatePoints = append(l.intermediatePoints, Point{x: x, y: y})
-		}
+	for n := 1; n < count; n++ {
+		x += xd
+		y += yd
+		l.intermediatePoints = append(l.intermediatePoints, Point{x: x, y: y})
 	}
 }
 
@@ -87,23 +79,6 @@ func (l *Line) IsHorizontal() bool {
 
 func (l *Line) IsVertical() bool {
 	return l.start.x == l.end.x
-}
-
-func (l *Line) NormalizePoints() {
-	if l.IsHorizontal() {
-		if l.start.x > l.end.x {
-			l.Swap()
-		}
-	} else if l.IsVertical() {
-		if l.start.y > l.end.y {
-			l.Swap()
-		}
-	} else if l.IsDiagonal() {
-		//d := int(math.Pow(float64(l.start.x + l.end.x), 2) + math.Pow(float64(l.start.y + l.end.y), 2))
-		//if d > 0 {
-		//	l.Swap()
-		//}
-	}
 }
 
 func (l *Line) Swap() {
@@ -133,7 +108,6 @@ func Parse(input []string) []Line {
 	for _, inputLine := range input {
 		line := Line{}
 		line.ParseLine(inputLine)
-		line.NormalizePoints()
 		line.CalculatePoints()
 		lines = append(lines, line)
 	}
