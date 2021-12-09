@@ -28,15 +28,18 @@ func main() {
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(waitCount)
 
-	exampleChannel := make(chan Result)
+	exampleChannelOne := make(chan Result)
+	exampleChannelTwo := make(chan Result)
 	partOneChannel := make(chan Result)
 	partTwoChannel := make(chan Result)
 
-	go doExamples(exampleChannel, &waitGroup)
+	go doExampleOne(exampleChannelOne, &waitGroup)
+	go doExampleTwo(exampleChannelTwo, &waitGroup)
 	go doPartOne(partOneChannel, &waitGroup)
 	go doPartTwo(partTwoChannel, &waitGroup)
 
-	exampleResult := <-exampleChannel
+	exampleResultOne := <-exampleChannelOne
+	exampleResultTwo := <-exampleChannelTwo
 	partOneResult := <-partOneChannel
 	partTwoResult := <-partTwoChannel
 
@@ -44,8 +47,10 @@ func main() {
 
 	log.
 		Info().
-		Int("example-answer", exampleResult.answer).
-		Int64("example-duration", exampleResult.duration).
+		Int("example-one-answer", exampleResultOne.answer).
+		Int64("example-one-duration", exampleResultOne.duration).
+		Int("example-two-answer", exampleResultTwo.answer).
+		Int64("example-two-duration", exampleResultTwo.duration).
 		Int("part-one-answer", partOneResult.answer).
 		Int64("part-one-duration", partOneResult.duration).
 		Int("part-two-answer", partTwoResult.answer).
@@ -57,7 +62,19 @@ func main() {
 	Executors
 */
 
-func doExamples(channel chan Result, waitGroup *sync.WaitGroup) {
+func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
+	start := time.Now()
+
+	_ = loadPuzzleInput("example-input.dat")
+
+	channel <- Result{
+		answer:   1,
+		duration: time.Since(start).Nanoseconds(),
+	}
+	waitGroup.Done()
+}
+
+func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	_ = loadPuzzleInput("example-input.dat")
