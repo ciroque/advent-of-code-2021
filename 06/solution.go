@@ -4,6 +4,8 @@ import (
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -11,6 +13,57 @@ import (
 /*
 	Solution implementation
 */
+
+//func FindSolutionForInput(filename string, targetDays int) int {
+//	solution := 0
+//	const NewFishAge = 8
+//	ages := loadPuzzleInput(filename)
+//
+//	for days := 0; days < targetDays; days++ {
+//		for index, age := range ages {
+//			nextAge := age - 1
+//			if nextAge < 0 {
+//				ages[index] = 6
+//				ages = append(ages, NewFishAge)
+//			} else {
+//				ages[index] = nextAge
+//			}
+//		}
+//	}
+//
+//	solution = len(ages)
+//
+//	return solution
+//}
+
+func FindSolutionFastForInput(filename string, targetDays int) int {
+	solution := 0
+
+	ages := loadPuzzleInput(filename)
+
+	var ageCounter = make(map[int]int)
+
+	for _, age := range ages {
+		ageCounter[age]++
+	}
+
+	for days := 0; days < targetDays; days++ {
+		currentCount := ageCounter[0]
+
+		for index := 0; index < 8; index++ {
+			ageCounter[index] = ageCounter[index+1]
+		}
+
+		ageCounter[8] = currentCount
+		ageCounter[6] += currentCount
+	}
+
+	for _, age := range ageCounter {
+		solution += age
+	}
+
+	return solution
+}
 
 /*
 	Main
@@ -60,10 +113,8 @@ func main() {
 func doExamples(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("example-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionFastForInput("example-input.dat", 80),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -72,10 +123,8 @@ func doExamples(channel chan Result, waitGroup *sync.WaitGroup) {
 func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("puzzle-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionFastForInput("puzzle-input.dat", 80),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -84,15 +133,20 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("puzzle-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionFastForInput("puzzle-input.dat", 256),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
 }
 
-func loadPuzzleInput(filename string) string {
-	return support.ReadFile(filename)
+func loadPuzzleInput(filename string) []int {
+	var ages []int
+	lines := strings.Split(support.ReadFile(filename), ",")
+	for _, value := range lines {
+		age, _ := strconv.Atoi(value)
+		ages = append(ages, age)
+	}
+
+	return ages
 }
