@@ -24,7 +24,7 @@ type Result struct {
 func main() {
 	zerolog.TimeFieldFormat = zerolog.TimeFormatUnix
 
-	waitCount := 3
+	waitCount := 4
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(waitCount)
 
