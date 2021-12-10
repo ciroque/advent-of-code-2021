@@ -4,6 +4,7 @@ import (
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"strings"
 	"sync"
 	"time"
 )
@@ -11,6 +12,66 @@ import (
 /*
 	Solution implementation
 */
+
+const (
+	One   int = 2
+	Four      = 4
+	Seven     = 3
+	Eight     = 7
+)
+
+type DisplayLine struct {
+	digits   []string
+	patterns []string
+
+	digitLengthMap map[int]int
+}
+
+func (dl *DisplayLine) MapDigitLengths() *DisplayLine {
+	for _, digit := range dl.digits {
+		dl.digitLengthMap[len(digit)]++
+	}
+
+	return dl
+}
+
+func (dl *DisplayLine) CalculateUniqueSegmentCount() int {
+	return dl.digitLengthMap[One] +
+		dl.digitLengthMap[Four] +
+		dl.digitLengthMap[Seven] +
+		dl.digitLengthMap[Eight]
+}
+
+func BuildDisplayLine(data string) DisplayLine {
+	parts := strings.Split(data, "|")
+	patterns := strings.Fields(parts[0])
+	digits := strings.Fields(parts[1])
+
+	return NewDisplayLine(digits, patterns)
+}
+
+func NewDisplayLine(digits []string, patterns []string) DisplayLine {
+	return DisplayLine{
+		digits:         digits,
+		patterns:       patterns,
+		digitLengthMap: make(map[int]int),
+	}
+}
+
+func FindSolutionForInput(filename string, solutionCalculator func([]string) int) int {
+	puzzleInput := loadPuzzleInput(filename)
+	return solutionCalculator(puzzleInput)
+}
+
+func FindUniqueSegmentCount(puzzleInput []string) int {
+	accumulator := 0
+	for _, line := range puzzleInput {
+		displayLine := BuildDisplayLine(line)
+		accumulator += displayLine.MapDigitLengths().CalculateUniqueSegmentCount()
+	}
+
+	return accumulator
+}
 
 /*
 	Main
@@ -65,10 +126,8 @@ func main() {
 func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("example-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionForInput("example-input.dat", FindUniqueSegmentCount),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -77,10 +136,8 @@ func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
 func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("example-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   0, //  FindSolutionForInput("example-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -89,10 +146,8 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("puzzle-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionForInput("puzzle-input.dat", FindUniqueSegmentCount),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -101,15 +156,13 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("puzzle-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
 }
 
-func loadPuzzleInput(filename string) string {
-	return support.ReadFile(filename)
+func loadPuzzleInput(filename string) []string {
+	return support.ReadFileIntoLines(filename)
 }
