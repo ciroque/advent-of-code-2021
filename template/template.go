@@ -12,6 +12,12 @@ import (
 	Solution implementation
 */
 
+func FindSolutionForInput(filename string) int {
+	solution := 0
+
+	return solution
+}
+
 /*
 	Main
 */
@@ -65,10 +71,8 @@ func main() {
 func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("example-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionForInput("example-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -77,10 +81,8 @@ func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
 func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("example-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionForInput("example-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -89,10 +91,8 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("puzzle-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionForInput("puzzle-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -101,10 +101,8 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
-	_ = loadPuzzleInput("puzzle-input.dat")
-
 	channel <- Result{
-		answer:   1,
+		answer:   FindSolutionForInput("puzzle-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
