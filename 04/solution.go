@@ -78,6 +78,8 @@ func (p *Board) checkDimension(calculateIndex IndexCalculator) bool {
 			index := calculateIndex(cellIndex, rowIndex, size)
 			if p.cells[index].marked == true {
 				foundCount = foundCount + 1
+			} else {
+				break
 			}
 		}
 
