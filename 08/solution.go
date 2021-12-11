@@ -1,9 +1,11 @@
 package main
 
 import (
+	"advent-of-code-2021/utility"
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"math"
 	"strings"
 	"sync"
 	"time"
@@ -24,12 +26,77 @@ type DisplayLine struct {
 	digits   []string
 	patterns []string
 
-	digitLengthMap map[int]int
+	digitLengthMap   map[int]int
+	patternLengthMap map[int][]string
+	patternMap       map[string]int
 }
 
 func (dl *DisplayLine) MapDigitLengths() *DisplayLine {
 	for _, digit := range dl.digits {
 		dl.digitLengthMap[len(digit)]++
+	}
+
+	return dl
+}
+
+func (dl *DisplayLine) MapPatterns() *DisplayLine {
+	lastRemainingFor := func(length int) string {
+		patterns := dl.patternLengthMap[length]
+		for _, pattern := range patterns {
+			if len(pattern) > 0 {
+				return pattern
+			}
+		}
+
+		return ""
+	}
+
+	findBy := func(length int, contains string) string {
+		patterns := dl.patternLengthMap[length]
+		for index, pattern := range patterns {
+			if utility.ContainsAllCharacters(pattern, contains) {
+				dl.patternLengthMap[length][index] = ""
+				return pattern
+			}
+		}
+		return ""
+	}
+
+	removeChars := func(str, toRemove string) string {
+		for _, char := range toRemove {
+			str = strings.ReplaceAll(str, string(char), "")
+		}
+		return str
+	}
+
+	one := utility.SortString(dl.patternLengthMap[One][0])
+	four := utility.SortString(dl.patternLengthMap[Four][0])
+	seven := utility.SortString(dl.patternLengthMap[Seven][0])
+	eight := utility.SortString(dl.patternLengthMap[Eight][0])
+	three := utility.SortString(findBy(5, one))
+	nine := utility.SortString(findBy(6, three))
+	zero := utility.SortString(findBy(6, one))
+	six := utility.SortString(lastRemainingFor(6))
+	five := utility.SortString(findBy(5, removeChars(nine, one)))
+	two := utility.SortString(lastRemainingFor(5))
+
+	dl.patternMap[zero] = 0
+	dl.patternMap[one] = 1
+	dl.patternMap[two] = 2
+	dl.patternMap[three] = 3
+	dl.patternMap[four] = 4
+	dl.patternMap[five] = 5
+	dl.patternMap[six] = 6
+	dl.patternMap[seven] = 7
+	dl.patternMap[eight] = 8
+	dl.patternMap[nine] = 9
+
+	return dl
+}
+
+func (dl *DisplayLine) MapPatternLengths() *DisplayLine {
+	for _, pattern := range dl.patterns {
+		dl.patternLengthMap[len(pattern)] = append(dl.patternLengthMap[len(pattern)], pattern)
 	}
 
 	return dl
@@ -42,6 +109,19 @@ func (dl *DisplayLine) CalculateUniqueSegmentCount() int {
 		dl.digitLengthMap[Eight]
 }
 
+func (dl *DisplayLine) CalculateOutputSum() int {
+	accumulator := 0
+	pow := 3
+	for _, digit := range dl.digits {
+		digit = utility.SortString(digit)
+		d := dl.patternMap[digit]
+		intermediate := d * int(math.Pow10(pow))
+		accumulator += intermediate
+		pow--
+	}
+	return accumulator
+}
+
 func BuildDisplayLine(data string) DisplayLine {
 	parts := strings.Split(data, "|")
 	patterns := strings.Fields(parts[0])
@@ -52,9 +132,11 @@ func BuildDisplayLine(data string) DisplayLine {
 
 func NewDisplayLine(digits []string, patterns []string) DisplayLine {
 	return DisplayLine{
-		digits:         digits,
-		patterns:       patterns,
-		digitLengthMap: make(map[int]int),
+		digits:           digits,
+		patterns:         patterns,
+		digitLengthMap:   make(map[int]int),
+		patternLengthMap: make(map[int][]string),
+		patternMap:       make(map[string]int),
 	}
 }
 
@@ -68,6 +150,16 @@ func FindUniqueSegmentCount(puzzleInput []string) int {
 	for _, line := range puzzleInput {
 		displayLine := BuildDisplayLine(line)
 		accumulator += displayLine.MapDigitLengths().CalculateUniqueSegmentCount()
+	}
+
+	return accumulator
+}
+
+func FindOutputValuesSum(puzzleInput []string) int {
+	accumulator := 0
+	for _, line := range puzzleInput {
+		displayLine := BuildDisplayLine(line)
+		accumulator += displayLine.MapPatternLengths().MapPatterns().CalculateOutputSum()
 	}
 
 	return accumulator
@@ -137,7 +229,7 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", FindOutputValuesSum),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -157,7 +249,7 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", FindOutputValuesSum),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
