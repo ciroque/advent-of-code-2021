@@ -6,6 +6,7 @@ import (
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -24,6 +25,7 @@ type FloorMap struct {
 
 	heights      [][]int
 	lowestPoints map[geometry.Coordinate]int
+	basins       []int
 }
 
 func (fm *FloorMap) Append(heights string) *FloorMap {
@@ -36,6 +38,16 @@ func (fm *FloorMap) Append(heights string) *FloorMap {
 	}
 
 	return fm
+}
+
+func (fm *FloorMap) CalculateBasinSizeProduct() int {
+	accumulator := 1
+	sort.Sort(sort.Reverse(sort.IntSlice(fm.basins)))
+	topThree := fm.basins[0:3]
+	for _, size := range topThree {
+		accumulator *= size
+	}
+	return accumulator
 }
 
 func (fm *FloorMap) CalculateRiskSum() int {
@@ -64,12 +76,7 @@ func (fm *FloorMap) HeightAt(coordinate geometry.Coordinate) int {
 }
 
 func (fm *FloorMap) IsLowestPoint(coordinate geometry.Coordinate) bool {
-	north := geometry.Coordinate{X: coordinate.X, Y: coordinate.Y - 1}
-	south := geometry.Coordinate{X: coordinate.X, Y: coordinate.Y + 1}
-	east := geometry.Coordinate{X: coordinate.X + 1, Y: coordinate.Y}
-	west := geometry.Coordinate{X: coordinate.X - 1, Y: coordinate.Y}
-
-	adjacentCoordinates := []geometry.Coordinate{north, south, east, west}
+	adjacentCoordinates := coordinate.Adjacent()
 
 	accumulator := 0
 
@@ -80,6 +87,46 @@ func (fm *FloorMap) IsLowestPoint(coordinate geometry.Coordinate) bool {
 	}
 
 	return accumulator == len(adjacentCoordinates)
+}
+
+func (fm *FloorMap) MapBasins() *FloorMap {
+	HighestPoint := 9
+
+	runner := func(coordinate geometry.Coordinate) (int, geometry.Coordinate) {
+		coordinatesChannel := make(chan geometry.Coordinate, fm.dimX*fm.dimY)
+		accumulator := 0
+		var seen = make(map[geometry.Coordinate]bool)
+		coordinatesChannel <- coordinate
+
+		for {
+			select {
+			case coordinate := <-coordinatesChannel:
+				if _, found := seen[coordinate]; found {
+					continue
+				}
+
+				seen[coordinate] = true
+
+				if fm.HeightAt(coordinate) != HighestPoint {
+					accumulator++
+					for _, adjacent := range coordinate.Adjacent() {
+						if fm.HeightAt(adjacent) != HighestPoint {
+							coordinatesChannel <- adjacent
+						}
+					}
+				}
+			default:
+				return accumulator, coordinate
+			}
+		}
+	}
+
+	for lowestPoint := range fm.lowestPoints {
+		size, _ := runner(lowestPoint)
+		fm.basins = append(fm.basins, size)
+	}
+
+	return fm
 }
 
 func (fm *FloorMap) Print() {
@@ -102,6 +149,7 @@ func NewFloorMap(puzzleInput []string) FloorMap {
 
 		heights:      make([][]int, 0),
 		lowestPoints: make(map[geometry.Coordinate]int),
+		basins:       []int{},
 	}
 
 	rowOfNines := strings.Repeat(highestPoint, floorMap.dimX+2)
@@ -121,6 +169,12 @@ func NewFloorMap(puzzleInput []string) FloorMap {
 func CalculatePartOneSolution(floorMap FloorMap) int {
 	// Yeah, I know, this reads nicely, but it imposes an order on the methods that could be confusing
 	return floorMap.FindLowestPoints().CalculateRiskSum()
+}
+
+func CalculatePartTwoSolution(floorMap FloorMap) int {
+	solution := 0
+	solution = floorMap.FindLowestPoints().MapBasins().CalculateBasinSizeProduct()
+	return solution
 }
 
 func FindSolutionForInput(filename string, calculateSolution func(floorMap FloorMap) int) int {
@@ -198,7 +252,7 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", CalculatePartTwoSolution),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -218,7 +272,7 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, // FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", CalculatePartTwoSolution),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
