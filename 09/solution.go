@@ -122,14 +122,18 @@ func NewFloorMap(puzzleInput []string) FloorMap {
 	return floorMap
 }
 
-func FindSolutionForInput(filename string) int {
+func CalculatePartOneSolution(floorMap FloorMap) int {
+	// Yeah, I know, this reads nicely, but it imposes an order on the methods that could be confusing
+	return floorMap.FindLowestPoints().CalculateRiskSum()
+}
+
+func FindSolutionForInput(filename string, calculateSolution func(floorMap FloorMap) int) int {
 	solution := 0
 
 	puzzleInput := loadPuzzleInput(filename)
 	floorMap := NewFloorMap(puzzleInput)
 
-	// Yeah, I know, this reads nicely, but it imposes an order on the methods that could be confusing
-	solution = floorMap.FindLowestPoints().CalculateRiskSum()
+	solution = calculateSolution(floorMap)
 
 	return solution
 }
@@ -188,7 +192,7 @@ func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", CalculatePartOneSolution),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -208,7 +212,7 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", CalculatePartOneSolution),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
