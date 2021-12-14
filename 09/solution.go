@@ -1,6 +1,7 @@
 package main
 
 import (
+	"advent-of-code-2021/geometry"
 	"fmt"
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
@@ -17,16 +18,12 @@ import (
 
 const highestPoint = "9"
 
-//type Coordinate struct {
-//	x, y int
-//}
-
 type FloorMap struct {
 	dimX int
 	dimY int
 
 	heights      [][]int
-	lowestPoints map[Coordinate]int
+	lowestPoints map[geometry.Coordinate]int
 }
 
 func (fm *FloorMap) Append(heights string) *FloorMap {
@@ -52,7 +49,7 @@ func (fm *FloorMap) CalculateRiskSum() int {
 func (fm *FloorMap) FindLowestPoints() *FloorMap {
 	for yi := 1; yi <= fm.dimY; yi++ {
 		for xi := 1; xi <= fm.dimX; xi++ {
-			coordinate := Coordinate{x: xi, y: yi}
+			coordinate := geometry.Coordinate{X: xi, Y: yi}
 			if fm.IsLowestPoint(coordinate) {
 				fm.lowestPoints[coordinate] = 1 + fm.heights[yi][xi]
 			}
@@ -62,17 +59,17 @@ func (fm *FloorMap) FindLowestPoints() *FloorMap {
 	return fm
 }
 
-func (fm *FloorMap) HeightAt(coordinate Coordinate) int {
-	return fm.heights[coordinate.y][coordinate.x]
+func (fm *FloorMap) HeightAt(coordinate geometry.Coordinate) int {
+	return fm.heights[coordinate.Y][coordinate.X]
 }
 
-func (fm *FloorMap) IsLowestPoint(coordinate Coordinate) bool {
-	north := Coordinate{x: coordinate.x, y: coordinate.y - 1}
-	south := Coordinate{x: coordinate.x, y: coordinate.y + 1}
-	east := Coordinate{x: coordinate.x + 1, y: coordinate.y}
-	west := Coordinate{x: coordinate.x - 1, y: coordinate.y}
+func (fm *FloorMap) IsLowestPoint(coordinate geometry.Coordinate) bool {
+	north := geometry.Coordinate{X: coordinate.X, Y: coordinate.Y - 1}
+	south := geometry.Coordinate{X: coordinate.X, Y: coordinate.Y + 1}
+	east := geometry.Coordinate{X: coordinate.X + 1, Y: coordinate.Y}
+	west := geometry.Coordinate{X: coordinate.X - 1, Y: coordinate.Y}
 
-	adjacentCoordinates := []Coordinate{north, south, east, west}
+	adjacentCoordinates := []geometry.Coordinate{north, south, east, west}
 
 	accumulator := 0
 
@@ -104,7 +101,7 @@ func NewFloorMap(puzzleInput []string) FloorMap {
 		dimX: len(puzzleInput[0]),
 
 		heights:      make([][]int, 0),
-		lowestPoints: make(map[Coordinate]int),
+		lowestPoints: make(map[geometry.Coordinate]int),
 	}
 
 	rowOfNines := strings.Repeat(highestPoint, floorMap.dimX+2)
