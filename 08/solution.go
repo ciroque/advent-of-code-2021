@@ -1,7 +1,7 @@
 package main
 
 import (
-	"advent-of-code-2021/utility"
+	"advent-of-code-2021/utility/stringers"
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -54,7 +54,7 @@ func (dl *DisplayLine) MapPatterns() *DisplayLine {
 	findBy := func(length int, contains string) string {
 		patterns := dl.patternLengthMap[length]
 		for index, pattern := range patterns {
-			if utility.ContainsAllCharacters(pattern, contains) {
+			if stringers.ContainsAllCharacters(pattern, contains) {
 				dl.patternLengthMap[length][index] = ""
 				return pattern
 			}
@@ -69,16 +69,16 @@ func (dl *DisplayLine) MapPatterns() *DisplayLine {
 		return str
 	}
 
-	one := utility.SortString(dl.patternLengthMap[One][0])
-	four := utility.SortString(dl.patternLengthMap[Four][0])
-	seven := utility.SortString(dl.patternLengthMap[Seven][0])
-	eight := utility.SortString(dl.patternLengthMap[Eight][0])
-	three := utility.SortString(findBy(5, one))
-	nine := utility.SortString(findBy(6, three))
-	zero := utility.SortString(findBy(6, one))
-	six := utility.SortString(lastRemainingFor(6))
-	five := utility.SortString(findBy(5, removeChars(nine, one)))
-	two := utility.SortString(lastRemainingFor(5))
+	one := stringers.SortString(dl.patternLengthMap[One][0])
+	four := stringers.SortString(dl.patternLengthMap[Four][0])
+	seven := stringers.SortString(dl.patternLengthMap[Seven][0])
+	eight := stringers.SortString(dl.patternLengthMap[Eight][0])
+	three := stringers.SortString(findBy(5, one))
+	nine := stringers.SortString(findBy(6, three))
+	zero := stringers.SortString(findBy(6, one))
+	six := stringers.SortString(lastRemainingFor(6))
+	five := stringers.SortString(findBy(5, removeChars(nine, one)))
+	two := stringers.SortString(lastRemainingFor(5))
 
 	dl.patternMap[zero] = 0
 	dl.patternMap[one] = 1
@@ -113,7 +113,7 @@ func (dl *DisplayLine) CalculateOutputSum() int {
 	accumulator := 0
 	pow := 3
 	for _, digit := range dl.digits {
-		digit = utility.SortString(digit)
+		digit = stringers.SortString(digit)
 		d := dl.patternMap[digit]
 		intermediate := d * int(math.Pow10(pow))
 		accumulator += intermediate
