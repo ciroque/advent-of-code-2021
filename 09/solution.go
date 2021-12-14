@@ -63,7 +63,7 @@ func (fm *FloorMap) FindLowestPoints() *FloorMap {
 		for xi := 1; xi <= fm.dimX; xi++ {
 			coordinate := geometry.NewCoordinate(xi, yi)
 			if fm.IsLowestPoint(coordinate) {
-				fm.lowestPoints[coordinate] = 1 + fm.heights[yi][xi]
+				fm.lowestPoints[coordinate] = 1 + fm.HeightAt(coordinate)
 			}
 		}
 	}
