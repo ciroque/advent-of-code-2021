@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/ciroque/advent-of-code-2020/support"
+	//"github.com/ciroque/advent-of-code-2021/geometry"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"strconv"
@@ -18,8 +19,7 @@ import (
 const highestPoint = "9"
 
 type Coordinate struct {
-	x int
-	y int
+	x, y int
 }
 
 type FloorMap struct {
