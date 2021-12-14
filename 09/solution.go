@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"github.com/ciroque/advent-of-code-2020/support"
-	"github.com/ciroque/advent-of-code-2021/utility/geometry"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"strconv"
