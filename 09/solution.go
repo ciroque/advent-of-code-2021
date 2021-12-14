@@ -171,9 +171,8 @@ func CalculatePartOneSolution(floorMap FloorMap) int {
 }
 
 func CalculatePartTwoSolution(floorMap FloorMap) int {
-	solution := 0
-	solution = floorMap.FindLowestPoints().MapBasins().CalculateBasinSizeProduct()
-	return solution
+	// What? Again with the implicit ordering?
+	return floorMap.FindLowestPoints().MapBasins().CalculateBasinSizeProduct()
 }
 
 func FindSolutionForInput(filename string, calculateSolution func(floorMap FloorMap) int) int {
