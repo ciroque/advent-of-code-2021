@@ -1,7 +1,7 @@
 package main
 
 import (
-	"advent-of-code-2021/geometry"
+	"advent-of-code-2021/utility/geometry"
 	"fmt"
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
@@ -49,7 +49,7 @@ func (fm *FloorMap) CalculateRiskSum() int {
 func (fm *FloorMap) FindLowestPoints() *FloorMap {
 	for yi := 1; yi <= fm.dimY; yi++ {
 		for xi := 1; xi <= fm.dimX; xi++ {
-			coordinate := geometry.Coordinate{X: xi, Y: yi}
+			coordinate := geometry.NewCoordinate(xi, yi)
 			if fm.IsLowestPoint(coordinate) {
 				fm.lowestPoints[coordinate] = 1 + fm.heights[yi][xi]
 			}
