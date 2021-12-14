@@ -90,40 +90,39 @@ func (fm *FloorMap) IsLowestPoint(coordinate geometry.Coordinate) bool {
 }
 
 func (fm *FloorMap) MapBasins() *FloorMap {
-	HighestPoint := 9
+	HighestPoint, _ := strconv.Atoi(highestPoint)
 
-	runner := func(coordinate geometry.Coordinate) (int, geometry.Coordinate) {
-		coordinatesChannel := make(chan geometry.Coordinate, fm.dimX*fm.dimY)
+	mapBasin := func(coordinate geometry.Coordinate) int {
+		// choosing the size of the buffered channel is ham-fisted at this point
+		coordinatesChannel := make(chan geometry.Coordinate, (fm.dimX*fm.dimY)/2)
 		accumulator := 0
-		var seen = make(map[geometry.Coordinate]bool)
+		var visited = make(map[geometry.Coordinate]bool)
 		coordinatesChannel <- coordinate
 
 		for {
 			select {
 			case coordinate := <-coordinatesChannel:
-				if _, found := seen[coordinate]; found {
+				if _, alreadyVisited := visited[coordinate]; alreadyVisited {
 					continue
 				}
 
-				seen[coordinate] = true
+				visited[coordinate] = true
 
-				if fm.HeightAt(coordinate) != HighestPoint {
-					accumulator++
-					for _, adjacent := range coordinate.Adjacent() {
-						if fm.HeightAt(adjacent) != HighestPoint {
-							coordinatesChannel <- adjacent
-						}
+				accumulator++
+
+				for _, adjacent := range coordinate.Adjacent() {
+					if fm.HeightAt(adjacent) != HighestPoint {
+						coordinatesChannel <- adjacent
 					}
 				}
 			default:
-				return accumulator, coordinate
+				return accumulator
 			}
 		}
 	}
 
 	for lowestPoint := range fm.lowestPoints {
-		size, _ := runner(lowestPoint)
-		fm.basins = append(fm.basins, size)
+		fm.basins = append(fm.basins, mapBasin(lowestPoint))
 	}
 
 	return fm
