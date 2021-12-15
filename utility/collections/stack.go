@@ -1,6 +1,8 @@
 package collections
 
-import "errors"
+import (
+	"errors"
+)
 
 // If you're looking for a concurrent Stack, this is not it.
 

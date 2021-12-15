@@ -5,6 +5,7 @@ import (
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"sort"
 	"sync"
 	"time"
 )
@@ -13,12 +14,21 @@ import (
 	Solution implementation
 */
 
-func InitializeScores() map[int32]int {
+func InitializeInvalidScores() map[int32]int {
 	return map[int32]int{
 		')': 3,
 		']': 57,
 		'}': 1197,
 		'>': 25137,
+	}
+}
+
+func InitializeIncompleteScores() map[int32]int {
+	return map[int32]int{
+		')': 1,
+		']': 2,
+		'}': 3,
+		'>': 4,
 	}
 }
 
@@ -31,10 +41,53 @@ func InitializeComplements() map[int32]int32 {
 	}
 }
 
+func CalculateAutocompleteScore(puzzleInput []string) int {
+	complements := map[rune]rune{
+		'{': '}',
+		'(': ')',
+		'[': ']',
+		'<': '>',
+	}
+
+	incompleteScores := InitializeIncompleteScores()
+	var scores []int
+
+	for _, line := range puzzleInput {
+		score := 0
+		stack := collections.NewStack()
+		valid := true
+		for _, char := range line {
+			if _, found := complements[char]; found {
+				stack.Push(complements[char])
+			} else if c, _ := stack.Peek(); char == c.(int32) {
+				_, _ = stack.Pop()
+			} else {
+				valid = false
+				break
+			}
+		}
+
+		if valid {
+			for !stack.IsEmpty() {
+				char, _ := stack.Pop()
+				score *= 5
+				if v, found := incompleteScores[char.(int32)]; found {
+					score += v
+				}
+			}
+			scores = append(scores, score)
+		}
+	}
+
+	sort.Ints(scores)
+
+	return scores[len(scores)/2]
+}
+
 func CalculateTotalSyntaxErrorScore(puzzleInput []string) int {
 	solution := 0
 	complements := InitializeComplements()
-	scores := InitializeScores()
+	scores := InitializeInvalidScores()
 
 	for _, line := range puzzleInput {
 		score := 0
@@ -44,6 +97,7 @@ func CalculateTotalSyntaxErrorScore(puzzleInput []string) int {
 				item, _ := stack.Pop()
 				if item.(int32) != complement {
 					score += scores[char]
+					break
 				}
 			} else {
 				stack.Push(char)
@@ -123,7 +177,7 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", CalculateAutocompleteScore),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -143,7 +197,7 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", CalculateAutocompleteScore),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
