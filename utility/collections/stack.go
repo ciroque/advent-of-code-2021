@@ -1,6 +1,7 @@
 package collections
 
 import (
+	"advent-of-code-2021/utility/geometry"
 	"errors"
 )
 
@@ -16,6 +17,10 @@ func NewStack() Stack {
 		headIndex: -1,
 		items:     []interface{}{},
 	}
+}
+
+func (s *Stack) Clear() {
+	s.items = []interface{}{}
 }
 
 func (s *Stack) IsEmpty() bool {
@@ -46,4 +51,13 @@ func (s *Stack) Pop() (interface{}, error) {
 func (s *Stack) Push(item interface{}) {
 	s.items = append(s.items, item)
 	s.headIndex = len(s.items) - 1
+}
+
+func (s *Stack) ToSlice() []interface{} {
+	var slice []interface{}
+	for !s.IsEmpty() {
+		c, _ := s.Pop()
+		slice = append(slice, c.(geometry.Coordinate))
+	}
+	return slice
 }

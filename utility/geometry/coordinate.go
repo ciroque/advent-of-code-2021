@@ -19,6 +19,17 @@ func (c *Coordinate) Adjacent() []Coordinate {
 	return []Coordinate{north, south, east, west}
 }
 
+func (c *Coordinate) AllAdjacent() []Coordinate {
+	adjacent := c.Adjacent()
+
+	adjacent = append(adjacent, Coordinate{X: c.X - 1, Y: c.Y - 1})
+	adjacent = append(adjacent, Coordinate{X: c.X - 1, Y: c.Y + 1})
+	adjacent = append(adjacent, Coordinate{X: c.X + 1, Y: c.Y + 1})
+	adjacent = append(adjacent, Coordinate{X: c.X + 1, Y: c.Y - 1})
+
+	return adjacent
+}
+
 func (c *Coordinate) String() string {
 	return fmt.Sprintf("{ %v, %v }", c.X, c.Y)
 }
