@@ -69,13 +69,21 @@ func FindSolutionForInput(filename string) int {
 func FindSolutionForInput2(filename string) int {
 	SentinelValue := -1
 	FlashPoint := 9
+
+	puzzleInput := loadPuzzleInput(filename)
+	matrix := collections.NewBorderedIntMatrix()
+	matrix.Populate(puzzleInput, SentinelValue)
+
 	flashedCount := 0
+	zeroCount := 0
 
 	var flashedDuringStep []geometry.Coordinate
 	flashedMap := make(map[geometry.Coordinate]int)
 
 	setToZero := func(v int) int { return 0 }
+
 	incrementValue := func(coordinate geometry.Coordinate, v int) int { return v + 1 }
+
 	recordFlashed := func(coordinate geometry.Coordinate, energyLevel int) int {
 		_, found := flashedMap[coordinate]
 		if energyLevel > FlashPoint && !found {
@@ -86,7 +94,6 @@ func FindSolutionForInput2(filename string) int {
 		return energyLevel
 	}
 
-	zeroCount := 0
 	countZeros := func(coordinate geometry.Coordinate, value int) int {
 		if value == 0 {
 			zeroCount++
@@ -94,10 +101,6 @@ func FindSolutionForInput2(filename string) int {
 
 		return value
 	}
-
-	matrix := collections.NewBorderedIntMatrix()
-	puzzleInput := loadPuzzleInput(filename)
-	matrix.Populate(puzzleInput, SentinelValue)
 
 	for j := 0; j < 500; j++ {
 
@@ -110,8 +113,6 @@ func FindSolutionForInput2(filename string) int {
 			matrix.ForEachAdjacentIn(flashedDuringStep, incrementValue)
 			if len(flashedDuringStep) == 0 {
 				break
-			} else if len(flashedDuringStep) == matrix.Size() {
-				return j
 			}
 			flashedDuringStep = []geometry.Coordinate{}
 		}
