@@ -1,5 +1,7 @@
 package stringers
 
+import "fmt"
+
 func ContainsAllCharacters(str, substr string) bool {
 	foundCount := 0
 	for _, toFind := range substr {
@@ -10,4 +12,10 @@ func ContainsAllCharacters(str, substr string) bool {
 		}
 	}
 	return foundCount == len(substr)
+}
+
+func PrintStringSlice(lines []string) {
+	for _, line := range lines {
+		fmt.Println(line)
+	}
 }
