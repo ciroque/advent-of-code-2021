@@ -24,12 +24,20 @@ func NewVertexInfo(label string) VertexInfo {
 	}
 }
 
+func (vi *VertexInfo) IsBig() bool {
+	return vi.label == strings.ToUpper(vi.label)
+}
+
 func (vi *VertexInfo) IsEnd() bool {
 	return vi.label == "end"
 }
 
-func (vi *VertexInfo) IsBig() bool {
-	return vi.label == strings.ToUpper(vi.label)
+func (vi *VertexInfo) IsSmall() bool {
+	return vi.label == strings.ToLower(vi.label)
+}
+
+func (vi *VertexInfo) IsStart() bool {
+	return vi.label == "start"
 }
 
 type AdjacencyList struct {
@@ -52,57 +60,100 @@ func NewAdjacencyList(puzzleInput []string) AdjacencyList {
 	return adjacencyList
 }
 
-func (al *AdjacencyList) Traverse(handlePathFound func(path []VertexInfo)) int {
-	var traverseGraph func(vertex VertexInfo, path []VertexInfo, visited map[VertexInfo]int, pathCount int) int
-	traverseGraph = func(vertex VertexInfo, path []VertexInfo, visited map[VertexInfo]int, pathCount int) int {
-		path = append(path, vertex)
-		for _, destination := range al.adjacent[vertex] {
+func (al *AdjacencyList) Traverse(
+	handlePathFound func(path []VertexInfo),
+	navigateNext func(destination VertexInfo, visited map[VertexInfo]int, exceededSmallCaveVisits bool) bool) int {
+
+	multipleVisits := false
+
+	var traverseGraph func(current VertexInfo, path []VertexInfo, visited map[VertexInfo]int, pathCount int, exceededSmallCaveVisits bool) int
+	traverseGraph = func(current VertexInfo, path []VertexInfo, visited map[VertexInfo]int, pathCount int, exceededSmallCaveVisits bool) int {
+		path = append(path, current)
+		for _, destination := range al.adjacent[current] {
 			if destination.IsEnd() {
+				//path = append(path, destination)
 				pathCount++
 				handlePathFound(path)
 				continue
 			}
 
-			visited[vertex]++
+			multipleVisits = multipleVisits || (current.IsSmall() && visited[current] >= 1)
 
-			if count, _ := visited[destination]; count == 0 || destination.IsBig() {
-				pathCount = traverseGraph(destination, path, visited, pathCount)
+			visited[current]++
+
+			if navigateNext(destination, visited, exceededSmallCaveVisits) {
+				pathCount = traverseGraph(destination, path, visited, pathCount, multipleVisits)
 			}
 
-			visited[vertex]--
+			visited[current]--
 		}
 
 		return pathCount
 	}
 
-	return traverseGraph(VertexInfo{label: "start"}, []VertexInfo{}, make(map[VertexInfo]int), 0)
+	startingPathCount := 0
+	return traverseGraph(VertexInfo{label: "start"}, []VertexInfo{}, make(map[VertexInfo]int), startingPathCount, multipleVisits)
 }
 
 func PrintPaths(paths [][]VertexInfo) {
 	for _, path := range paths {
-		vertexCount := len(path) - 1
-		for index, vertex := range path {
-			fmt.Printf("%v", vertex.label)
-			if index < vertexCount {
-				fmt.Print(" -> ")
-			} else {
-				fmt.Println()
-			}
+		PrintPath(path)
+	}
+	fmt.Println()
+}
+
+func PrintPath(path []VertexInfo) {
+	vertexCount := len(path) - 1
+	for index, vertex := range path {
+		fmt.Printf("%v", vertex.label)
+		if index < vertexCount {
+			fmt.Print(",")
+		} else {
+			fmt.Println()
 		}
 	}
 }
 
-func FindSolutionForInput(filename string) int {
+func VisitSmallCavesOnlyOnce(destination VertexInfo, visited map[VertexInfo]int, _ bool) bool {
+	count := visited[destination]
+	return count == 0 || destination.IsBig()
+}
+
+func ExtendedSearch(destination VertexInfo, visited map[VertexInfo]int, multipleVisits bool) bool {
+	return (destination.IsBig() ||
+		(visited[destination] < 2 && !multipleVisits) ||
+		visited[destination] == 0) && !destination.IsStart()
+}
+
+func FindSolutionForInput(filename string, navigateNext func(destination VertexInfo, visited map[VertexInfo]int, multipleVisitsToSmall bool) bool) int {
+	var paths [][]VertexInfo
+	trackPaths := func(path []VertexInfo) { paths = append(paths, path) }
 	puzzleInput := loadPuzzleInput(filename)
 	adjacencyList := NewAdjacencyList(puzzleInput)
-	var paths [][]VertexInfo
-	pathCount := 0
-	solution := adjacencyList.Traverse(func(path []VertexInfo) {
-		pathCount++
-		paths = append(paths, path)
-	})
 
+	solution := adjacencyList.Traverse(trackPaths, navigateNext)
 	//PrintPaths(paths)
+
+	//toString := func(infos []VertexInfo) string {
+	//	var labels []string
+	//	for _, info := range infos {
+	//		labels = append(labels, info.label)
+	//	}
+	//	labels = append(labels, "end")
+	//	return strings.Join(labels, ",")
+	//}
+	//
+	//expectedPaths := ExpectedPaths()
+	//for _, path := range paths {
+	//	expectedPaths[toString(path)]++
+	//}
+	//
+	//fmt.Println("Missing paths:")
+	//for path, count := range expectedPaths {
+	//	if count == 0 {
+	//		fmt.Println(path)
+	//	}
+	//}
 
 	return solution
 }
@@ -159,9 +210,8 @@ func main() {
 
 func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
-
 	channel <- Result{
-		answer:   FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", VisitSmallCavesOnlyOnce),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -171,7 +221,7 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, // FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", ExtendedSearch),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -181,7 +231,7 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", VisitSmallCavesOnlyOnce),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -191,7 +241,7 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, // FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", ExtendedSearch),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -199,4 +249,35 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 
 func loadPuzzleInput(filename string) []string {
 	return support.ReadFileIntoLines(filename)
+}
+
+func ExpectedPaths() map[string]int {
+	return map[string]int{
+		"start,A,b,A,b,A,c,A,end": 0,
+		"start,A,b,A,b,A,end":     0,
+		"start,A,b,A,b,end":       0,
+		"start,A,b,A,c,A,b,A,end": 0,
+		"start,A,b,A,c,A,b,end":   0,
+		"start,A,b,A,c,A,c,A,end": 0,
+		"start,A,b,A,c,A,end":     0,
+		"start,A,b,A,end":         0,
+		"start,A,b,d,b,A,c,A,end": 0,
+		"start,A,b,d,b,A,end":     0,
+		"start,A,b,d,b,end":       0,
+		"start,A,b,end":           0,
+		"start,A,c,A,b,A,b,A,end": 0,
+		"start,A,c,A,b,A,b,end":   0,
+		"start,A,c,A,b,A,c,A,end": 0,
+		"start,A,c,A,b,A,end":     0,
+		"start,A,c,A,b,d,b,A,end": 0,
+		"start,A,c,A,b,d,b,end":   0,
+		"start,A,c,A,b,end":       0,
+		"start,A,c,A,c,A,b,A,end": 0,
+		"start,A,c,A,c,A,b,end":   0,
+		"start,A,c,A,c,A,end":     0,
+		"start,A,c,A,end":         0,
+		"start,A,end":             0,
+		"start,b,A,b,A,c,A,end":   0,
+		"start,b,A,b,A,end":       0,
+	}
 }
