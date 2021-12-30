@@ -1,9 +1,12 @@
 package main
 
 import (
+	"advent-of-code-2021/utility/geometry"
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -12,10 +15,66 @@ import (
 	Solution implementation
 */
 
+type Fold struct {
+	axis  geometry.Axis
+	index int
+}
+
+type Puzzle struct {
+	coordinates []map[geometry.Coordinate]int
+	folds       []Fold
+}
+
+func NewPuzzle(data []string) Puzzle {
+	inFoldDefs := false
+	initialCoordinates := make(map[geometry.Coordinate]int)
+	var folds []Fold
+	for _, line := range data {
+		if len(line) == 0 {
+			inFoldDefs = true
+			continue
+		}
+		if inFoldDefs {
+			components := strings.Fields(line)
+			parts := strings.Split(components[2], "=")
+			var axis geometry.Axis
+			if parts[0] == "x" {
+				axis = geometry.Horizontal
+			} else {
+				axis = geometry.Vertical
+			}
+			index, _ := strconv.Atoi(parts[1])
+			folds = append(folds, Fold{axis: axis, index: index})
+		} else {
+			points := strings.Split(line, ",")
+			abscissa, _ := strconv.Atoi(points[0])
+			ordinate, _ := strconv.Atoi(points[1])
+			initialCoordinates[geometry.NewCoordinate(abscissa, ordinate)]++
+		}
+	}
+
+	var coordinates []map[geometry.Coordinate]int
+	coordinates = append(coordinates, initialCoordinates)
+
+	return Puzzle{
+		coordinates: coordinates,
+		folds:       folds,
+	}
+}
+
+func (p *Puzzle) FoldAt(axis geometry.Axis, index int) []geometry.Coordinate {
+	var foldedCoordinates []geometry.Coordinate
+
+	return foldedCoordinates
+}
+
 func FindSolutionForInput(filename string) int {
 	solution := 0
 
-	return solution
+	puzzleInput := loadPuzzleInput(filename)
+	puzzle := NewPuzzle(puzzleInput)
+
+	return solution + len(puzzle.coordinates)
 }
 
 /*
@@ -82,7 +141,7 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("example-input.dat"),
+		answer:   0, // FindSolutionForInput("example-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -92,7 +151,7 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("puzzle-input.dat"),
+		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -102,12 +161,12 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("puzzle-input.dat"),
+		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
 }
 
-func loadPuzzleInput(filename string) string {
-	return support.ReadFile(filename)
+func loadPuzzleInput(filename string) []string {
+	return support.ReadFileIntoLines(filename)
 }
