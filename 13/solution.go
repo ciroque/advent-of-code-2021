@@ -142,7 +142,6 @@ func partOne(puzzle Puzzle) int {
 //#.#.....#.#..#.#.#..#....#..#.#..#.#.##
 //#.#..#..#.#..#.#.#..#....#..#.#..#.#..#
 //#..#..##..###..#..#.####..##..###...###
-
 func partTwo(puzzle Puzzle) int {
 	solution := 0
 	for _, fold := range puzzle.folds {
@@ -243,7 +242,7 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 
 	channel <- Result{
 		answer:   FindSolutionForInput("puzzle-input.dat", partTwo),
-		duration: time.Since(start).Milliseconds(),
+		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
 }
