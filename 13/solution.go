@@ -2,6 +2,7 @@ package main
 
 import (
 	"advent-of-code-2021/utility/geometry"
+	"fmt"
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -62,19 +63,99 @@ func NewPuzzle(data []string) Puzzle {
 	}
 }
 
-func (p *Puzzle) FoldAt(axis geometry.Axis, index int) []geometry.Coordinate {
-	var foldedCoordinates []geometry.Coordinate
+func (p *Puzzle) FoldAt(axis geometry.Axis, index int) int {
+	nextCoordinates := make(map[geometry.Coordinate]int)
+	for coordinate := range p.coordinates[p.LastFold()] {
+		if axis == geometry.Vertical {
+			if coordinate.Y > index {
+				updatedCoordinate := geometry.NewCoordinate(coordinate.X, (index*2)-coordinate.Y)
+				nextCoordinates[updatedCoordinate]++
+			} else {
+				nextCoordinates[coordinate]++
+			}
+		} else {
+			if coordinate.X > index {
+				updatedCoordinate := geometry.NewCoordinate((index*2)-coordinate.X, coordinate.Y)
+				nextCoordinates[updatedCoordinate]++
+			} else {
+				nextCoordinates[coordinate]++
+			}
+		}
+	}
 
-	return foldedCoordinates
+	p.coordinates = append(p.coordinates, nextCoordinates)
+
+	return len(nextCoordinates)
 }
 
-func FindSolutionForInput(filename string) int {
-	solution := 0
+func (p *Puzzle) LastFold() int {
+	return len(p.coordinates) - 1
+}
 
+func (p *Puzzle) Height() int {
+	index := p.LastFold()
+	height := 0
+	for coordinate := range p.coordinates[index] {
+		if coordinate.Y > height {
+			height = coordinate.Y
+		}
+	}
+	return height
+}
+
+func (p *Puzzle) Width() int {
+	index := p.LastFold()
+	width := 0
+	for coordinate := range p.coordinates[index] {
+		if coordinate.X > width {
+			width = coordinate.X
+		}
+	}
+	return width
+}
+
+func (p *Puzzle) Print() {
+	width := p.Width()
+	height := p.Height()
+	index := p.LastFold()
+
+	for y := 0; y <= height; y++ {
+		for x := 0; x <= width; x++ {
+			if _, found := p.coordinates[index][geometry.NewCoordinate(x, y)]; found {
+				fmt.Print("#")
+			} else {
+				fmt.Print(".")
+			}
+		}
+		fmt.Println()
+	}
+}
+
+func partOne(puzzle Puzzle) int {
+	fold := puzzle.folds[0]
+	return puzzle.FoldAt(fold.axis, fold.index)
+}
+
+//#..#...##.###..#..#.####.#..#.###...##.
+//#.#.....#.#..#.#.#..#....#..#.#..#.#..#
+//##......#.###..##...###..#..#.###..#...
+//#.#.....#.#..#.#.#..#....#..#.#..#.#.##
+//#.#..#..#.#..#.#.#..#....#..#.#..#.#..#
+//#..#..##..###..#..#.####..##..###...###
+
+func partTwo(puzzle Puzzle) int {
+	solution := 0
+	for _, fold := range puzzle.folds {
+		solution = puzzle.FoldAt(fold.axis, fold.index)
+	}
+	puzzle.Print()
+	return solution
+}
+
+func FindSolutionForInput(filename string, operation func(puzzle Puzzle) int) int {
 	puzzleInput := loadPuzzleInput(filename)
 	puzzle := NewPuzzle(puzzleInput)
-
-	return solution + len(puzzle.coordinates)
+	return operation(puzzle)
 }
 
 /*
@@ -131,7 +212,7 @@ func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", partOne),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -141,7 +222,7 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, // FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", partTwo),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -151,7 +232,7 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", partOne),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -161,8 +242,8 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
-		duration: time.Since(start).Nanoseconds(),
+		answer:   FindSolutionForInput("puzzle-input.dat", partTwo),
+		duration: time.Since(start).Milliseconds(),
 	}
 	waitGroup.Done()
 }
