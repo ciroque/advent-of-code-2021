@@ -4,6 +4,7 @@ import (
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"strings"
 	"sync"
 	"time"
 )
@@ -12,8 +13,39 @@ import (
 	Solution implementation
 */
 
+type PolymerFormulator struct {
+	template       []string
+	insertionRules map[string]string
+}
+
+func NewPolymerFormulator(data []string) PolymerFormulator {
+	polymerFormulator := PolymerFormulator{
+		template:       []string{},
+		insertionRules: map[string]string{},
+	}
+
+	inInsertionRules := false
+
+	for _, line := range data {
+		if len(line) == 0 {
+			inInsertionRules = true
+			continue
+		}
+		if inInsertionRules {
+			parts := strings.Split(line, " -> ")
+			polymerFormulator.insertionRules[parts[0]] = parts[1]
+		} else {
+			polymerFormulator.template = append(polymerFormulator.template, line)
+		}
+	}
+
+	return polymerFormulator
+}
+
 func FindSolutionForInput(filename string) int {
 	solution := 0
+
+	_ = NewPolymerFormulator(loadPuzzleInput(filename))
 
 	return solution
 }
@@ -82,7 +114,7 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("example-input.dat"),
+		answer:   0, //  FindSolutionForInput("example-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -92,7 +124,7 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("puzzle-input.dat"),
+		answer:   0, //FindSolutionForInput("puzzle-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -102,12 +134,12 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("puzzle-input.dat"),
+		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
 }
 
-func loadPuzzleInput(filename string) string {
-	return support.ReadFile(filename)
+func loadPuzzleInput(filename string) []string {
+	return support.ReadFileIntoLines(filename)
 }
