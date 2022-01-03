@@ -61,7 +61,7 @@ func main() {
 		Int64("part-one-duration", partOneResult.duration).
 		Int("part-two-answer", partTwoResult.answer).
 		Int64("part-two-duration", partTwoResult.duration).
-		Msg("day 04")
+		Msg("Solved!")
 }
 
 /*
