@@ -4,6 +4,7 @@ import (
 	"github.com/ciroque/advent-of-code-2020/support"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+	"math"
 	"sort"
 	"strings"
 	"sync"
@@ -15,17 +16,13 @@ import (
 */
 
 type PolymerFormulator struct {
-	elementCounts  []map[string]int
 	insertionRules map[string]string
 	template       string
-	polymers       []string
 }
 
 func NewPolymerFormulator(data []string) PolymerFormulator {
 	polymerFormulator := PolymerFormulator{
-		elementCounts:  []map[string]int{},
 		insertionRules: map[string]string{},
-		polymers:       []string{},
 	}
 
 	inInsertionRules := false
@@ -46,39 +43,44 @@ func NewPolymerFormulator(data []string) PolymerFormulator {
 	return polymerFormulator
 }
 
-func (pf *PolymerFormulator) GetPairs(polymer string) []string {
-	var windowed []string
-	for index := 0; index < len(polymer)-1; index++ {
-		windowed = append(windowed, polymer[index:index+2])
-	}
-	return windowed
-}
+func (pf *PolymerFormulator) RunSubstitutions(count int) int {
+	pairs := pf.GetPairs()
 
-func (pf *PolymerFormulator) RunFirstInsertion() {
-	pf.RunInsertion(pf.template)
-}
+	for i := 0; i < count; i++ {
+		nextPairs := map[string]int{}
 
-func (pf *PolymerFormulator) RunInsertion(polymer string) {
-	var newPolymer []string
-	pairs := pf.GetPairs(polymer)
+		for pair := range pairs {
+			insertionMonomer := pf.insertionRules[pair]
+			firstMonomer := string(pair[0]) + insertionMonomer
+			secondMonomer := insertionMonomer + string(pair[1])
 
-	for _, pair := range pairs {
-		if insertion, found := pf.insertionRules[pair]; found {
-			newPolymer = append(newPolymer, string(pair[0]), insertion)
-		} else {
-			newPolymer = append(newPolymer, string(pair[0]), string(pair[1]))
+			nextPairs[firstMonomer] += pairs[pair]
+			nextPairs[secondMonomer] += pairs[pair]
 		}
+
+		pairs = nextPairs
 	}
 
-	newPolymer = append(newPolymer, string(pairs[len(pairs)-1][1]))
+	firstCounts := map[string]int{}
+	secondCounts := map[string]int{}
 
-	pf.polymers = append(pf.polymers, strings.Join(newPolymer, ""))
-}
+	for pair := range pairs {
+		firstMonomer := string(pair[0])
+		secondMonomer := string(pair[1])
 
-func (pf *PolymerFormulator) CalculateSolution() int {
-	counts := []int{}
-	index := len(pf.elementCounts) - 1
-	for _, value := range pf.elementCounts[index] {
+		firstCounts[firstMonomer] += pairs[pair]
+		secondCounts[secondMonomer] += pairs[pair]
+	}
+
+	monomerCounts := map[string]int{}
+
+	for monomer := range firstCounts {
+		monomerCounts[monomer] = int(math.Max(float64(firstCounts[monomer]), float64(secondCounts[monomer])))
+	}
+
+	var counts []int
+
+	for _, value := range monomerCounts {
 		counts = append(counts, value)
 	}
 
@@ -87,27 +89,18 @@ func (pf *PolymerFormulator) CalculateSolution() int {
 	return counts[len(counts)-1] - counts[0]
 }
 
-func (pf *PolymerFormulator) CalculateElementFrequencies() {
-	index := len(pf.polymers) - 1
-	elementCounts := map[string]int{}
-	for _, element := range pf.polymers[index] {
-		elementCounts[string(element)]++
+func (pf *PolymerFormulator) GetPairs() map[string]int {
+	windowed := map[string]int{}
+	for index := 0; index < len(pf.template)-1; index++ {
+		windowed[pf.template[index:index+2]]++
 	}
-	pf.elementCounts = append(pf.elementCounts, elementCounts)
+	return windowed
 }
 
-func FindSolutionForInput(filename string) int {
+func FindSolutionForInput(filename string, count int) int {
 	polymerFormulator := NewPolymerFormulator(loadPuzzleInput(filename))
 
-	polymerFormulator.RunFirstInsertion()
-	polymerFormulator.CalculateElementFrequencies()
-
-	for index := 0; index < 9; index++ {
-		polymerFormulator.RunInsertion(polymerFormulator.polymers[index])
-		polymerFormulator.CalculateElementFrequencies()
-	}
-
-	return polymerFormulator.CalculateSolution()
+	return polymerFormulator.RunSubstitutions(count)
 }
 
 /*
@@ -153,7 +146,7 @@ func main() {
 		Int64("part-one-duration", partOneResult.duration).
 		Int("part-two-answer", partTwoResult.answer).
 		Int64("part-two-duration", partTwoResult.duration).
-		Msg("day 04")
+		Msg("Solved!")
 }
 
 /*
@@ -164,7 +157,7 @@ func doExampleOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", 10),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -174,7 +167,7 @@ func doExampleTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("example-input.dat"),
+		answer:   FindSolutionForInput("example-input.dat", 40),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -184,7 +177,7 @@ func doPartOne(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", 10),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
@@ -194,7 +187,7 @@ func doPartTwo(channel chan Result, waitGroup *sync.WaitGroup) {
 	start := time.Now()
 
 	channel <- Result{
-		answer:   0, //  FindSolutionForInput("puzzle-input.dat"),
+		answer:   FindSolutionForInput("puzzle-input.dat", 40),
 		duration: time.Since(start).Nanoseconds(),
 	}
 	waitGroup.Done()
