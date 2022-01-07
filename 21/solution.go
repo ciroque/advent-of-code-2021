@@ -67,9 +67,7 @@ func FindSolutionForInput(playerOneStart int, playerTwoStart int) int {
 
 	for noWinner {
 		players[playerIndex].CalculateScore(roller.SummedThreeRolls())
-		if players[playerIndex].Won() {
-			noWinner = false
-		}
+		noWinner = !players[playerIndex].Won()
 		playerIndex ^= 1
 	}
 
