@@ -9,6 +9,8 @@ import (
 
 /*
 	Solution implementation
+
+	https://adventofcode.com/2021/day/21
 */
 
 type DeterministicDieRoller struct {
